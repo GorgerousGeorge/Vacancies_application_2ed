@@ -7,7 +7,7 @@ HEADERS = {
 
 
 def get_employers(employer_ids: list):
-    """Функция, которая получает информацию о работодателях по их ID."""
+    """Получение информации о работодателях по их ID."""
     employers = []
     for emp_id in employer_ids:
         url = f'https://api.hh.ru/employers/{emp_id}'
@@ -21,12 +21,12 @@ def get_employers(employer_ids: list):
             })
         else:
             print(f"Ошибка при получении работодателя {emp_id}: {response.status_code}")
-        time.sleep(0.3)  # чтобы не перегружать API ставим небольшой спящий режим
+        time.sleep(0.3)  # чтобы не перегружать API
     return employers
 
 
 def get_vacancies_for_employer(employer_id, per_page=10):
-    """Функция, которая получает вакансии для работодателя."""
+    """Получение вакансий для конкретного работодателя."""
     url = 'https://api.hh.ru/vacancies'
     params = {
         'employer_id': employer_id,
