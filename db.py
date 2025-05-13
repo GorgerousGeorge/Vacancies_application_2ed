@@ -1,63 +1,61 @@
 import psycopg2
+from psycopg2 import sql
 import os
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+from dotenv import load_dotenv
 
-HOST = os.getenv('DB_HOST')
-PORT = os.getenv('DB_PORT')
-DB_NAME = os.getenv('DB_NAME')
-USER = os.getenv('DB_USER')
-PASSWORD = os.getenv('DB_PASSWORD')
+load_dotenv()
 
 
-def create_database():
-    """Функция для создания БД"""
-    conn = psycopg2.connect(host=HOST, port=PORT, user=USER, password=PASSWORD)
-    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-    cur = conn.cursor()
-    cur.execute(f"SELECT 1 FROM pg_database WHERE datname='{DB_NAME}';")
-    if not cur.fetchone():
-        cur.execute(f'CREATE DATABASE {DB_NAME};')
-        print(f"База данных {DB_NAME} создана.")
-    else:
-        print(f"База данных {DB_NAME} уже существует.")
-    cur.close()
-    conn.close()
+class DBManager:
+    """Класс, который подключается к БД и взаимодействует с ней"""
+    def __init__(self):
+        self.conn = psycopg2.connect(
+            dbname=os.getenv('DB_NAME'),
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PASSWORD'),
+            host=os.getenv('DB_HOST'),
+            port=os.getenv('DB_PORT')
+        )
+        self.cursor = self.conn.cursor()
 
+    def get_companies_and_vacancies_count(self):
+        """метод, который получает список всех компаний и количество вакансий у каждой компании."""
+        query = """
+        SELECT company_name, COUNT(*) AS vacancies_count
+        FROM vacancies
+        GROUP BY company_name;
+        """
+        self.cursor.execute(query)
+        return self.cursor.fetchall()
 
-def get_connection():
-    """Функция, которая возвращает соединение с базой данных."""
-    return psycopg2.connect(
-        host=HOST,
-        port=PORT,
-        database=DB_NAME,
-        user=USER,
-        password=PASSWORD
-    )
+    def get_all_vacancies(self):
+        """метод, который получает список всех вакансий"""
+        query = "SELECT * FROM vacancies;"
+        self.cursor.execute(query)
+        return self.cursor.fetchall()
 
+    def get_avg_salary(self):
+        """метод, который получает среднюю зарплату по вакансиям"""
+        query = "SELECT AVG(salary) FROM vacancies WHERE salary IS NOT NULL;"
+        self.cursor.execute(query)
+        result = self.cursor.fetchone()
+        return result[0] if result else None
 
-def create_tables():
-    """Функция, которая создает таблицы в базе данных."""
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS organizations (
-                    id SERIAL PRIMARY KEY,
-                    employer_id INTEGER UNIQUE NOT NULL,
-                    name VARCHAR(255),
-                    url VARCHAR(255)
-                );
-            """)
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS vacancies (
-                    id SERIAL PRIMARY KEY,
-                    vacancy_id INTEGER UNIQUE NOT NULL,
-                    name VARCHAR(255),
-                    description TEXT,
-                    salary_from NUMERIC,
-                    salary_to NUMERIC,
-                    currency VARCHAR(10),
-                    published_at TIMESTAMP,
-                    employer_id INTEGER REFERENCES organizations(employer_id)
-                );
-            """)
-            print("Таблицы созданы.")
+    def get_vacancies_with_higher_salary(self):
+        """метод, который получает список всех вакансий, у которых зарплата выше средней по всем вакансиям"""
+        avg_salary = self.get_avg_salary()
+        query = "SELECT * FROM vacancies WHERE salary > %s;"
+        self.cursor.execute(query, (avg_salary,))
+        return self.cursor.fetchall()
+
+    def get_vacancies_with_keyword(self, keyword):
+        """метод, который получает список всех вакансий, в названии которых содержатся переданные в метод слова"""
+        query = "SELECT * FROM vacancies WHERE description ILIKE %s;"
+        like_pattern = f"%{keyword}%"
+        self.cursor.execute(query, (like_pattern,))
+        return self.cursor.fetchall()
+
+    def close(self):
+        """метод, который закрывает соединение с БД"""
+        self.cursor.close()
+        self.conn.close()
