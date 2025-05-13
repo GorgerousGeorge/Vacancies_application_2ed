@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "vacancies-application-2ed"
+version = "0.1.0"
+description = ""
+authors = ["Georgiy Sinitsyn <gorgerousgeorge@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
