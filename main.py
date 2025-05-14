@@ -1,51 +1,59 @@
-import os
-from dotenv import load_dotenv
-from db import create_database, create_tables, get_connection
-from api import get_employers, get_vacancies_for_employer
-
-load_dotenv()
+from db import DBManager
 
 
 def main():
-    create_database()
+    """Точка входа и взаимодействие с пользователем"""
+    db_manager = DBManager()
 
-    create_tables()
+    while True:
+        print("\nВыберите действие:")
+        print("1 - Получить список компаний и количество вакансий")
+        print("2 - Получить все вакансии")
+        print("3 - Средняя зарплата по вакансиям")
+        print("4 - Вакансии с зарплатой выше средней")
+        print("5 - Вакансии по ключевому слову")
+        print("6 - Выход")
 
-    employer_ids = [1001, 1027, 1050, 1070, 1100, 1130, 1150, 1180, 1200, 1250]
+        choice = input("Введите номер действия: ")
 
-    employers_info = get_employers(employer_ids)
+        if choice == '1':
+            results = db_manager.get_companies_and_vacancies_count()
+            for name, count in results:
+                print(f"Компания: {name}, Вакансий: {count}")
 
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            for emp in employers_info:
-                cur.execute("""
-                    INSERT INTO organizations (employer_id, name, url)
-                    VALUES (%s, %s, %s)
-                    ON CONFLICT (employer_id) DO NOTHING;
-                """, (emp['employer_id'], emp['name'], emp['url']))
+        elif choice == '2':
+            results = db_manager.get_all_vacancies()
+            for comp_name, vac_name, s_from, s_to, currency, url in results:
+                print(
+                    f"Компания: {comp_name}\nВакансия: {vac_name}\nЗарплата: {s_from} - {s_to} {currency}\nСсылка: {url}\n---")
 
-            for employer_id in employer_ids:
-                print(f"Получение вакансий для работодателя {employer_id}...")
-                vacancies = get_vacancies_for_employer(employer_id)
-                for vac in vacancies:
-                    try:
-                        cur.execute("""
-                            INSERT INTO vacancies (
-                                vacancy_id, name, description,
-                                salary_from, salary_to,
-                                currency, published_at,
-                                employer_id)
-                            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
-                            ON CONFLICT (vacancy_id) DO NOTHING;
-                        """, (
-                            vac['vacancy_id'], vac['name'], vac['description'],
-                            vac['salary_from'], vac['salary_to'],
-                            vac['currency'], vac['published_at'],
-                            vac['employer_id']
-                        ))
-                    except Exception as e:
-                        print(f"Ошибка вставки вакансии {vac['vacancy_id']}: {e}")
+        elif choice == '3':
+            avg_salary = db_manager.get_avg_salary()
+            print(f"Средняя зарплата по вакансиям: {avg_salary:.2f}" if avg_salary else "Нет данных о зарплатах.")
+
+        elif choice == '4':
+            results = db_manager.get_vacancies_with_higher_salary()
+            for comp_name, vac_name, s_from, s_to, currency, url in results:
+                print(
+                    f"Компания: {comp_name}\nВакансия: {vac_name}\nЗарплата: {s_from} - {s_to} {currency}\nСсылка: {url}\n---")
+
+        elif choice == '5':
+            keyword = input("Введите ключевое слово для поиска в названии вакансии: ")
+            results = db_manager.get_vacancies_with_keyword(keyword)
+
+            for comp_name, vac_name, s_from, s_to, currency, url in results:
+                print(
+                    f"Компания: {comp_name}\nВакансия: {vac_name}\nЗарплата: {s_from} - {s_to} {currency}\nСсылка: {url}\n---")
+
+        elif choice == '6':
+            print("Выход.")
+            break
+
+        else:
+            print("Некорректный выбор. Попробуйте снова.")
+
+    db_manager.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
