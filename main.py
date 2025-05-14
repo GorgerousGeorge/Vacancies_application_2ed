@@ -25,7 +25,8 @@ def main():
             results = db_manager.get_all_vacancies()
             for comp_name, vac_name, s_from, s_to, currency, url in results:
                 print(
-                    f"Компания: {comp_name}\nВакансия: {vac_name}\nЗарплата: {s_from} - {s_to} {currency}\nСсылка: {url}\n---")
+                    f"Компания: {comp_name}\nВакансия: {vac_name}\nЗарплата: {s_from} - {s_to} {currency}\nСсылка: "
+                    f"{url}\n---")
 
         elif choice == '3':
             avg_salary = db_manager.get_avg_salary()
@@ -35,7 +36,8 @@ def main():
             results = db_manager.get_vacancies_with_higher_salary()
             for comp_name, vac_name, s_from, s_to, currency, url in results:
                 print(
-                    f"Компания: {comp_name}\nВакансия: {vac_name}\nЗарплата: {s_from} - {s_to} {currency}\nСсылка: {url}\n---")
+                    f"Компания: {comp_name}\nВакансия: {vac_name}\nЗарплата: {s_from} - {s_to} {currency}\nСсылка: "
+                    f"{url}\n---")
 
         elif choice == '5':
             keyword = input("Введите ключевое слово для поиска в названии вакансии: ")
@@ -43,7 +45,8 @@ def main():
 
             for comp_name, vac_name, s_from, s_to, currency, url in results:
                 print(
-                    f"Компания: {comp_name}\nВакансия: {vac_name}\nЗарплата: {s_from} - {s_to} {currency}\nСсылка: {url}\n---")
+                    f"Компания: {comp_name}\nВакансия: {vac_name}\nЗарплата: {s_from} - {s_to} {currency}\nСсылка: "
+                    f"{url}\n---")
 
         elif choice == '6':
             print("Выход.")
