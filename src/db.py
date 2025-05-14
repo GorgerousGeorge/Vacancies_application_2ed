@@ -120,7 +120,8 @@ class DBManager:
         pattern = f"%{keyword}%"
         with self.conn.cursor() as cur:
             cur.execute("""
-                SELECT c.name AS company_name, v.name AS vacancy_name, v.salary_from, v.salary_to, v.salary_currency, v.url
+                SELECT c.name AS company_name, v.name AS vacancy_name, v.salary_from, v.salary_to, v.salary_currency, 
+                v.url
                 FROM vacancies v JOIN companies c ON v.company_id=c.id
                 WHERE v.name ILIKE %s;
             """, (pattern,))
