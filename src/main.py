@@ -1,4 +1,4 @@
-from db import DBManager
+from src.db import DBManager
 
 
 def main():
